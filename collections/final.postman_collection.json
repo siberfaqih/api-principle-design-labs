@@ -1,0 +1,2243 @@
+{
+	"info": {
+		"_postman_id": "bb2534db-fc5c-4d3d-a196-6afbc94661bd",
+		"name": "Final",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "29030180",
+		"_collection_link": "https://sdfds7.postman.co/workspace/secure-api-design-principles~9948ff8b-b8c5-449f-bdf9-341f14bcfb29/collection/29030180-bb2534db-fc5c-4d3d-a196-6afbc94661bd?action=share&source=collection_link&creator=29030180"
+	},
+	"item": [
+		{
+			"name": "01-auth-authz",
+			"item": [
+				{
+					"name": "Vuln API (3001)",
+					"item": [
+						{
+							"name": "1. JWT Vulnerabilities",
+							"item": [
+								{
+									"name": "Get Token for Testing",
+									"event": [
+										{
+											"listen": "test",
+											"script": {
+												"exec": [
+													"if (pm.response.code === 200) {",
+													"    const response = pm.response.json();",
+													"    pm.collectionVariables.set('jwt_token', response.access_token);",
+													"}"
+												],
+												"type": "text/javascript",
+												"packages": {},
+												"requests": {}
+											}
+										}
+									],
+									"request": {
+										"method": "POST",
+										"header": [
+											{
+												"key": "Content-Type",
+												"value": "application/json"
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n  \"username\": \"alice\",\n  \"password\": \"password1\"\n}"
+										},
+										"url": {
+											"raw": "{{vuln_base_url}}/auth/login",
+											"host": [
+												"{{vuln_base_url}}"
+											],
+											"path": [
+												"auth",
+												"login"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "Test JWT Whoami Endpoint",
+									"request": {
+										"method": "GET",
+										"header": [
+											{
+												"key": "Authorization",
+												"value": "Bearer {{jwt_token}}"
+											}
+										],
+										"url": {
+											"raw": "{{vuln_base_url}}/whoami",
+											"host": [
+												"{{vuln_base_url}}"
+											],
+											"path": [
+												"whoami"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "Test Invalid JWT",
+									"request": {
+										"method": "GET",
+										"header": [
+											{
+												"key": "Authorization",
+												"value": "Bearer invalid.jwt.token"
+											}
+										],
+										"url": {
+											"raw": "{{vuln_base_url}}/whoami",
+											"host": [
+												"{{vuln_base_url}}"
+											],
+											"path": [
+												"whoami"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "JWT Attack - Algorithm Confusion (alg=none)",
+									"request": {
+										"method": "GET",
+										"header": [
+											{
+												"key": "Authorization",
+												"value": "Bearer eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0.eyJzdWIiOjEsInJvbGUiOiJhZG1pbiIsInRlbmFudF9pZCI6InQxIn0.",
+												"description": "JWT with alg=none header and admin role payload"
+											}
+										],
+										"url": {
+											"raw": "{{vuln_base_url}}/whoami",
+											"host": [
+												"{{vuln_base_url}}"
+											],
+											"path": [
+												"whoami"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "JWT Attack - Weak Secret Brute Force",
+									"request": {
+										"method": "GET",
+										"header": [
+											{
+												"key": "Authorization",
+												"value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOjEsInJvbGUiOiJhZG1pbiIsInRlbmFudF9pZCI6InQxIn0.YQsDzaBUZkJNbU-xvIH8T5zb8_PwrTpJpKVgFjq6YQs",
+												"description": "JWT signed with weak secret 'random' and admin role"
+											}
+										],
+										"url": {
+											"raw": "{{vuln_base_url}}/whoami",
+											"host": [
+												"{{vuln_base_url}}"
+											],
+											"path": [
+												"whoami"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "JWT Attack - Expired Token (Should Work on Vuln API)",
+									"request": {
+										"method": "GET",
+										"header": [
+											{
+												"key": "Authorization",
+												"value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOjEsInJvbGUiOiJ1c2VyIiwidGVuYW50X2lkIjoidDEiLCJleHAiOjE2MDAwMDAwMDB9.KSEb2f9-W3zeyFXKDUJjcOxzL5uxwdJFEzQoEZbOCNc",
+												"description": "JWT with expired timestamp (should be rejected by secure API but accepted by vulnerable API)"
+											}
+										],
+										"url": {
+											"raw": "{{vuln_base_url}}/whoami",
+											"host": [
+												"{{vuln_base_url}}"
+											],
+											"path": [
+												"whoami"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "JWT Attack - Role Escalation via Token Manipulation",
+									"request": {
+										"method": "GET",
+										"header": [
+											{
+												"key": "Authorization",
+												"value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOjIsInJvbGUiOiJhZG1pbiIsInRlbmFudF9pZCI6InQxIiwiaWF0IjoxNzYxOTUyMDI5fQ.89mdlYAE-AQYYvbVrm3KscBDG-OiZ_lIeywqUNT5bHI",
+												"description": "JWT with user ID 2 but admin role, signed with weak secret"
+											}
+										],
+										"url": {
+											"raw": "{{vuln_base_url}}/whoami",
+											"host": [
+												"{{vuln_base_url}}"
+											],
+											"path": [
+												"whoami"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "JWT Attack - Cross-Tenant Access",
+									"request": {
+										"method": "GET",
+										"header": [
+											{
+												"key": "Authorization",
+												"value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOjEsInJvbGUiOiJ1c2VyIiwidGVuYW50X2lkIjoidDIifQ.8vKJJkJNbU-xvIH8T5zb8_PwrTpJpKVgFjq6YQs8vK",
+												"description": "JWT with user 1 but tenant t2 (cross-tenant access attempt)"
+											}
+										],
+										"url": {
+											"raw": "{{vuln_base_url}}/whoami",
+											"host": [
+												"{{vuln_base_url}}"
+											],
+											"path": [
+												"whoami"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "JWT Attack - Access Projects with Admin Token",
+									"request": {
+										"method": "GET",
+										"header": [
+											{
+												"key": "Authorization",
+												"value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOjEsInJvbGUiOiJhZG1pbiIsInRlbmFudF9pZCI6InQxIn0.4IL0q7ZeFRjr37QnSSuylnolLLsNyv0WhEYoZrf_5gY",
+												"description": "Access all projects with forged admin token"
+											}
+										],
+										"url": {
+											"raw": "{{vuln_base_url}}/projects",
+											"host": [
+												"{{vuln_base_url}}"
+											],
+											"path": [
+												"projects"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "JWT Attack - Delete Project with Forged Admin Token",
+									"request": {
+										"method": "DELETE",
+										"header": [
+											{
+												"key": "Authorization",
+												"value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOjEsInJvbGUiOiJhZG1pbiIsInRlbmFudF9pZCI6InQxIn0.4IL0q7ZeFRjr37QnSSuylnolLLsNyv0WhEYoZrf_5gY",
+												"description": "Attempt to delete project with forged admin token"
+											}
+										],
+										"url": {
+											"raw": "{{vuln_base_url}}/projects/2",
+											"host": [
+												"{{vuln_base_url}}"
+											],
+											"path": [
+												"projects",
+												"2"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "JWT Attack - Create Project with alg=none Token",
+									"request": {
+										"method": "POST",
+										"header": [
+											{
+												"key": "Authorization",
+												"value": "Bearer eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0.eyJzdWIiOjEsInJvbGUiOiJhZG1pbiIsInRlbmFudF9pZCI6InQxIn0.",
+												"description": "Create project using alg=none token with admin role"
+											},
+											{
+												"key": "Content-Type",
+												"value": "application/json"
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n  \"name\": \"Malicious Project via JWT Attack\",\n  \"description\": \"Created using alg=none JWT attack\",\n  \"owner_id\": 1,\n  \"tenant_id\": \"t1\",\n  \"secret\": \"hacked-via-jwt\"\n}"
+										},
+										"url": {
+											"raw": "{{vuln_base_url}}/projects",
+											"host": [
+												"{{vuln_base_url}}"
+											],
+											"path": [
+												"projects"
+											]
+										}
+									},
+									"response": []
+								}
+							]
+						},
+						{
+							"name": "2. IDOR (Insecure Direct Object Reference)",
+							"item": [
+								{
+									"name": "Access Project Without Authentication",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "{{vuln_base_url}}/projects/2",
+											"host": [
+												"{{vuln_base_url}}"
+											],
+											"path": [
+												"projects",
+												"2"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "Access All Projects Without Authentication",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "{{vuln_base_url}}/projects",
+											"host": [
+												"{{vuln_base_url}}"
+											],
+											"path": [
+												"projects"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "Access Other User's Project (Project ID 2)",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "{{vuln_base_url}}/projects/2",
+											"host": [
+												"{{vuln_base_url}}"
+											],
+											"path": [
+												"projects",
+												"2"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "Access Cross-Tenant Project (Diana's Project)",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "{{vuln_base_url}}/projects/5",
+											"host": [
+												"{{vuln_base_url}}"
+											],
+											"path": [
+												"projects",
+												"5"
+											]
+										}
+									},
+									"response": []
+								}
+							]
+						},
+						{
+							"name": "3. Missing Authentication",
+							"item": [
+								{
+									"name": "Create Project Without Authentication",
+									"request": {
+										"method": "POST",
+										"header": [
+											{
+												"key": "Content-Type",
+												"value": "application/json"
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n  \"name\": \"Malicious Project\",\n  \"description\": \"Created without authentication\",\n  \"owner_id\": 1,\n  \"tenant_id\": \"t1\",\n  \"secret\": \"hacked-secret\"\n}"
+										},
+										"url": {
+											"raw": "{{vuln_base_url}}/projects",
+											"host": [
+												"{{vuln_base_url}}"
+											],
+											"path": [
+												"projects"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "Update Other User's Project",
+									"request": {
+										"method": "PATCH",
+										"header": [
+											{
+												"key": "Content-Type",
+												"value": "application/json"
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n  \"name\": \"Hacked Project\",\n  \"description\": \"Modified by attacker\",\n  \"secret\": \"compromised-secret\"\n}"
+										},
+										"url": {
+											"raw": "{{vuln_base_url}}/projects/2",
+											"host": [
+												"{{vuln_base_url}}"
+											],
+											"path": [
+												"projects",
+												"2"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "Delete Other User's Project",
+									"request": {
+										"method": "DELETE",
+										"header": [],
+										"url": {
+											"raw": "{{vuln_base_url}}/projects/1",
+											"host": [
+												"{{vuln_base_url}}"
+											],
+											"path": [
+												"projects",
+												"1"
+											]
+										}
+									},
+									"response": []
+								}
+							]
+						}
+					]
+				},
+				{
+					"name": "Secure API (3002)",
+					"item": [
+						{
+							"name": "1. Fixed API - Authentication",
+							"item": [
+								{
+									"name": "Fixed API - Login Alice (Get Token)",
+									"event": [
+										{
+											"listen": "test",
+											"script": {
+												"exec": [
+													"if (pm.response.code === 200) {",
+													"    const response = pm.response.json();",
+													"    pm.collectionVariables.set('alice_token', response.access_token);",
+													"    pm.test('Login successful', function () {",
+													"        pm.expect(response.access_token).to.be.a('string');",
+													"    });",
+													"} else {",
+													"    pm.test('Login failed', function () {",
+													"        pm.expect(pm.response.code).to.not.equal(200);",
+													"    });",
+													"}"
+												],
+												"type": "text/javascript",
+												"packages": {},
+												"requests": {}
+											}
+										}
+									],
+									"request": {
+										"method": "POST",
+										"header": [
+											{
+												"key": "Content-Type",
+												"value": "application/json"
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n  \"username\": \"alice\",\n  \"password\": \"password1\"\n}"
+										},
+										"url": {
+											"raw": "{{fixed_base_url}}/auth/login",
+											"host": [
+												"{{fixed_base_url}}"
+											],
+											"path": [
+												"auth",
+												"login"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "Fixed API - Login Bob (Get Token)",
+									"event": [
+										{
+											"listen": "test",
+											"script": {
+												"exec": [
+													"if (pm.response.code === 200) {",
+													"    const response = pm.response.json();",
+													"    pm.collectionVariables.set('bob_token', response.access_token);",
+													"}"
+												],
+												"type": "text/javascript",
+												"packages": {},
+												"requests": {}
+											}
+										}
+									],
+									"request": {
+										"method": "POST",
+										"header": [
+											{
+												"key": "Content-Type",
+												"value": "application/json"
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n  \"username\": \"bob\",\n  \"password\": \"password2\"\n}"
+										},
+										"url": {
+											"raw": "{{fixed_base_url}}/auth/login",
+											"host": [
+												"{{fixed_base_url}}"
+											],
+											"path": [
+												"auth",
+												"login"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "Fixed API - Login Charlie Admin (Get Token)",
+									"event": [
+										{
+											"listen": "test",
+											"script": {
+												"exec": [
+													"if (pm.response.code === 200) {",
+													"    const response = pm.response.json();",
+													"    pm.collectionVariables.set('charlie_token', response.access_token);",
+													"}"
+												],
+												"type": "text/javascript",
+												"packages": {},
+												"requests": {}
+											}
+										}
+									],
+									"request": {
+										"method": "POST",
+										"header": [
+											{
+												"key": "Content-Type",
+												"value": "application/json"
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n  \"username\": \"charlie\",\n  \"password\": \"password3\"\n}"
+										},
+										"url": {
+											"raw": "{{fixed_base_url}}/auth/login",
+											"host": [
+												"{{fixed_base_url}}"
+											],
+											"path": [
+												"auth",
+												"login"
+											]
+										}
+									},
+									"response": []
+								}
+							]
+						},
+						{
+							"name": "2. Authenticated Tests (With Valid Token)",
+							"item": [
+								{
+									"name": "Login and Set Token",
+									"event": [
+										{
+											"listen": "test",
+											"script": {
+												"exec": [
+													"if (pm.response.code === 200) {",
+													"    const response = pm.response.json();",
+													"    pm.environment.set('auth_token', response.access_token);",
+													"}"
+												],
+												"type": "text/javascript",
+												"packages": {},
+												"requests": {}
+											}
+										}
+									],
+									"request": {
+										"method": "POST",
+										"header": [
+											{
+												"key": "Content-Type",
+												"value": "application/json"
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n  \"username\": \"alice\",\n  \"password\": \"password1\"\n}"
+										},
+										"url": {
+											"raw": "{{vuln_base_url}}/auth/login",
+											"host": [
+												"{{vuln_base_url}}"
+											],
+											"path": [
+												"auth",
+												"login"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "Access Own Project (Authorized)",
+									"request": {
+										"method": "GET",
+										"header": [
+											{
+												"key": "Authorization",
+												"value": "Bearer {{alice_token}}"
+											}
+										],
+										"url": {
+											"raw": "{{fixed_base_url}}/projects",
+											"host": [
+												"{{fixed_base_url}}"
+											],
+											"path": [
+												"projects"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "Try to Access Other User's Project (Should Fail in Fixed API)",
+									"request": {
+										"method": "GET",
+										"header": [
+											{
+												"key": "Authorization",
+												"value": "Bearer {{alice_token}}"
+											}
+										],
+										"url": {
+											"raw": "{{fixed_base_url}}/projects/2",
+											"host": [
+												"{{fixed_base_url}}"
+											],
+											"path": [
+												"projects",
+												"2"
+											]
+										}
+									},
+									"response": []
+								}
+							]
+						},
+						{
+							"name": "3. Missing Authentication",
+							"item": [
+								{
+									"name": "Create Project",
+									"request": {
+										"auth": {
+											"type": "bearer",
+											"bearer": [
+												{
+													"key": "token",
+													"value": "{{alice_token}}",
+													"type": "string"
+												}
+											]
+										},
+										"method": "POST",
+										"header": [
+											{
+												"key": "Content-Type",
+												"value": "application/json"
+											},
+											{
+												"key": "Bearer",
+												"value": "{{alice_token}}",
+												"type": "text",
+												"disabled": true
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": "{\"name\":\"Test Project 2\",\"description\":\"A test project\"}"
+										},
+										"url": {
+											"raw": "{{fixed_base_url}}/projects",
+											"host": [
+												"{{fixed_base_url}}"
+											],
+											"path": [
+												"projects"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "Update Other User's Project",
+									"request": {
+										"auth": {
+											"type": "bearer",
+											"bearer": [
+												{
+													"key": "token",
+													"value": "{{alice_token}}",
+													"type": "string"
+												}
+											]
+										},
+										"method": "PATCH",
+										"header": [
+											{
+												"key": "Content-Type",
+												"value": "application/json"
+											},
+											{
+												"key": "Bearer",
+												"value": "{{alice_token}}",
+												"type": "text",
+												"disabled": true
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n  \"name\": \"Modified Project\",\n  \"description\": \"Modified by Alice\",\n  \"secret\": \"Test\"\n}"
+										},
+										"url": {
+											"raw": "{{fixed_base_url}}/projects/2",
+											"host": [
+												"{{fixed_base_url}}"
+											],
+											"path": [
+												"projects",
+												"2"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "Delete Other User's Project",
+									"request": {
+										"auth": {
+											"type": "bearer",
+											"bearer": [
+												{
+													"key": "token",
+													"value": "{{alice_token}}",
+													"type": "string"
+												}
+											]
+										},
+										"method": "DELETE",
+										"header": [],
+										"url": {
+											"raw": "{{fixed_base_url}}/projects/2",
+											"host": [
+												"{{fixed_base_url}}"
+											],
+											"path": [
+												"projects",
+												"2"
+											]
+										}
+									},
+									"response": []
+								}
+							]
+						},
+						{
+							"name": "3. Fixed API - Authorization & Access Control",
+							"item": [
+								{
+									"name": "Fixed API - Alice Access Own Project (Should Succeed)",
+									"event": [
+										{
+											"listen": "test",
+											"script": {
+												"exec": [
+													"pm.test('Alice can access own project', function () {",
+													"    pm.expect(pm.response.code).to.equal(200);",
+													"    const response = pm.response.json();",
+													"    pm.expect(response.owner_id).to.equal(1);",
+													"});"
+												],
+												"type": "text/javascript",
+												"packages": {},
+												"requests": {}
+											}
+										}
+									],
+									"request": {
+										"method": "GET",
+										"header": [
+											{
+												"key": "Authorization",
+												"value": "Bearer {{alice_token}}"
+											}
+										],
+										"url": {
+											"raw": "{{fixed_base_url}}/projects/1",
+											"host": [
+												"{{fixed_base_url}}"
+											],
+											"path": [
+												"projects",
+												"1"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "Fixed API - Alice Try Access Bob's Project (Should Fail)",
+									"event": [
+										{
+											"listen": "test",
+											"script": {
+												"exec": [
+													"pm.test('Alice cannot access Bob\\'s project', function () {",
+													"    pm.expect(pm.response.code).to.equal(403);",
+													"});"
+												],
+												"type": "text/javascript",
+												"packages": {},
+												"requests": {}
+											}
+										}
+									],
+									"request": {
+										"method": "GET",
+										"header": [
+											{
+												"key": "Authorization",
+												"value": "Bearer {{alice_token}}"
+											}
+										],
+										"url": {
+											"raw": "{{fixed_base_url}}/projects/2",
+											"host": [
+												"{{fixed_base_url}}"
+											],
+											"path": [
+												"projects",
+												"2"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "Fixed API - Bob Access Own Project (Should Succeed)",
+									"event": [
+										{
+											"listen": "test",
+											"script": {
+												"exec": [
+													"pm.test('Bob can access own project', function () {",
+													"    pm.expect(pm.response.code).to.equal(200);",
+													"    const response = pm.response.json();",
+													"    pm.expect(response.owner_id).to.equal(2);",
+													"});"
+												],
+												"type": "text/javascript"
+											}
+										}
+									],
+									"request": {
+										"method": "GET",
+										"header": [
+											{
+												"key": "Authorization",
+												"value": "Bearer {{bob_token}}"
+											}
+										],
+										"url": {
+											"raw": "{{fixed_base_url}}/projects/2",
+											"host": [
+												"{{fixed_base_url}}"
+											],
+											"path": [
+												"projects",
+												"2"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "Fixed API - Charlie Admin Access Any Project (Should Succeed)",
+									"event": [
+										{
+											"listen": "test",
+											"script": {
+												"exec": [
+													"pm.test('Admin can access any project in same tenant', function () {",
+													"    pm.expect(pm.response.code).to.equal(200);",
+													"});"
+												],
+												"type": "text/javascript",
+												"packages": {},
+												"requests": {}
+											}
+										}
+									],
+									"request": {
+										"method": "GET",
+										"header": [
+											{
+												"key": "Authorization",
+												"value": "Bearer {{bob_token}}"
+											}
+										],
+										"url": {
+											"raw": "{{fixed_base_url}}/projects/5",
+											"host": [
+												"{{fixed_base_url}}"
+											],
+											"path": [
+												"projects",
+												"5"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "Fixed API - Access Without Authentication (Should Fail)",
+									"event": [
+										{
+											"listen": "test",
+											"script": {
+												"exec": [
+													"pm.test('Unauthenticated access denied', function () {",
+													"    pm.expect(pm.response.code).to.equal(401);",
+													"});"
+												],
+												"type": "text/javascript"
+											}
+										}
+									],
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "{{fixed_base_url}}/projects/1",
+											"host": [
+												"{{fixed_base_url}}"
+											],
+											"path": [
+												"projects",
+												"1"
+											]
+										}
+									},
+									"response": []
+								}
+							],
+							"event": [
+								{
+									"listen": "prerequest",
+									"script": {
+										"type": "text/javascript",
+										"packages": {},
+										"requests": {},
+										"exec": [
+											""
+										]
+									}
+								},
+								{
+									"listen": "test",
+									"script": {
+										"type": "text/javascript",
+										"packages": {},
+										"requests": {},
+										"exec": [
+											""
+										]
+									}
+								}
+							]
+						},
+						{
+							"name": "4. Fixed API - Admin Privileges & Edge Cases",
+							"item": [
+								{
+									"name": "Fixed API - Admin Delete Any Project in Tenant",
+									"event": [
+										{
+											"listen": "test",
+											"script": {
+												"exec": [
+													"pm.test('Admin can delete projects in tenant', function () {",
+													"    pm.expect(pm.response.code).to.equal(200);",
+													"});"
+												],
+												"type": "text/javascript",
+												"packages": {},
+												"requests": {}
+											}
+										}
+									],
+									"request": {
+										"method": "DELETE",
+										"header": [
+											{
+												"key": "Authorization",
+												"value": "Bearer {{charlie_token}}"
+											}
+										],
+										"url": {
+											"raw": "{{fixed_base_url}}/projects/1",
+											"host": [
+												"{{fixed_base_url}}"
+											],
+											"path": [
+												"projects",
+												"1"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "Fixed API - Non-Admin Try Delete Other's Project (Should Fail)",
+									"event": [
+										{
+											"listen": "test",
+											"script": {
+												"exec": [
+													"pm.test('Non-admin cannot delete others projects', function () {",
+													"    pm.expect(pm.response.code).to.equal(403);",
+													"});"
+												],
+												"type": "text/javascript"
+											}
+										}
+									],
+									"request": {
+										"method": "DELETE",
+										"header": [
+											{
+												"key": "Authorization",
+												"value": "Bearer {{alice_token}}"
+											}
+										],
+										"url": {
+											"raw": "{{fixed_base_url}}/projects/2",
+											"host": [
+												"{{fixed_base_url}}"
+											],
+											"path": [
+												"projects",
+												"2"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "Fixed API - Try Update Non-Existent Project (Should Fail)",
+									"event": [
+										{
+											"listen": "test",
+											"script": {
+												"exec": [
+													"pm.test('Non-existent project returns 404', function () {",
+													"    pm.expect(pm.response.code).to.equal(404);",
+													"});"
+												],
+												"type": "text/javascript"
+											}
+										}
+									],
+									"request": {
+										"method": "PATCH",
+										"header": [
+											{
+												"key": "Authorization",
+												"value": "Bearer {{alice_token}}"
+											},
+											{
+												"key": "Content-Type",
+												"value": "application/json"
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n  \"name\": \"Updated Name\"\n}"
+										},
+										"url": {
+											"raw": "{{fixed_base_url}}/projects/9999",
+											"host": [
+												"{{fixed_base_url}}"
+											],
+											"path": [
+												"projects",
+												"9999"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "Fixed API - Try Update Other User Without Permission (Should Fail)",
+									"event": [
+										{
+											"listen": "test",
+											"script": {
+												"exec": [
+													"pm.test('Cannot update other users', function () {",
+													"    pm.expect(pm.response.code).to.equal(403);",
+													"});"
+												],
+												"type": "text/javascript",
+												"packages": {},
+												"requests": {}
+											}
+										}
+									],
+									"request": {
+										"method": "PATCH",
+										"header": [
+											{
+												"key": "Authorization",
+												"value": "Bearer {{alice_token}}"
+											},
+											{
+												"key": "Content-Type",
+												"value": "application/json"
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n  \"display_name\": \"Hacked Bob\"\n}"
+										},
+										"url": {
+											"raw": "{{fixed_base_url}}/users/",
+											"host": [
+												"{{fixed_base_url}}"
+											],
+											"path": [
+												"users",
+												""
+											]
+										}
+									},
+									"response": []
+								}
+							]
+						},
+						{
+							"name": "12. Fixed API - JWT Security & API Key Management",
+							"item": [
+								{
+									"name": "Fixed API - Whoami with Valid JWT",
+									"event": [
+										{
+											"listen": "test",
+											"script": {
+												"exec": [
+													"pm.test('JWT verification successful', function () {",
+													"    pm.expect(pm.response.code).to.equal(200);",
+													"    const response = pm.response.json();",
+													"    pm.expect(response.username).to.equal('alice');",
+													"});"
+												],
+												"type": "text/javascript"
+											}
+										}
+									],
+									"request": {
+										"method": "GET",
+										"header": [
+											{
+												"key": "Authorization",
+												"value": "Bearer {{alice_token}}"
+											}
+										],
+										"url": {
+											"raw": "{{fixed_base_url}}/whoami",
+											"host": [
+												"{{fixed_base_url}}"
+											],
+											"path": [
+												"whoami"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "Fixed API - Whoami with Invalid JWT (Should Fail)",
+									"event": [
+										{
+											"listen": "test",
+											"script": {
+												"exec": [
+													"pm.test('Invalid JWT rejected', function () {",
+													"    pm.expect(pm.response.code).to.equal(401);",
+													"});"
+												],
+												"type": "text/javascript"
+											}
+										}
+									],
+									"request": {
+										"method": "GET",
+										"header": [
+											{
+												"key": "Authorization",
+												"value": "Bearer invalid.jwt.token"
+											}
+										],
+										"url": {
+											"raw": "{{fixed_base_url}}/whoami",
+											"host": [
+												"{{fixed_base_url}}"
+											],
+											"path": [
+												"whoami"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "Fixed API - JWT Attack - Algorithm Confusion (Should Fail)",
+									"event": [
+										{
+											"listen": "test",
+											"script": {
+												"exec": [
+													"pm.test('Algorithm confusion attack blocked', function () {",
+													"    pm.expect(pm.response.code).to.equal(401);",
+													"    const response = pm.response.json();",
+													"    pm.expect(response.error).to.equal('invalid token');",
+													"});"
+												],
+												"type": "text/javascript"
+											}
+										}
+									],
+									"request": {
+										"method": "GET",
+										"header": [
+											{
+												"key": "Authorization",
+												"value": "Bearer eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0.eyJzdWIiOjEsInJvbGUiOiJhZG1pbiIsInRlbmFudF9pZCI6InQxIn0.",
+												"description": "JWT with alg=none should be rejected by fixed API"
+											}
+										],
+										"url": {
+											"raw": "{{fixed_base_url}}/whoami",
+											"host": [
+												"{{fixed_base_url}}"
+											],
+											"path": [
+												"whoami"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "Fixed API - JWT Attack - Weak Secret Token (Should Fail)",
+									"event": [
+										{
+											"listen": "test",
+											"script": {
+												"exec": [
+													"pm.test('Weak secret token rejected', function () {",
+													"    pm.expect(pm.response.code).to.equal(401);",
+													"    const response = pm.response.json();",
+													"    pm.expect(response.error).to.equal('invalid token');",
+													"});"
+												],
+												"type": "text/javascript"
+											}
+										}
+									],
+									"request": {
+										"method": "GET",
+										"header": [
+											{
+												"key": "Authorization",
+												"value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOjEsInJvbGUiOiJhZG1pbiIsInRlbmFudF9pZCI6InQxIn0.YQsDzaBUZkJNbU-xvIH8T5zb8_PwrTpJpKVgFjq6YQs",
+												"description": "JWT signed with weak secret 'random' should be rejected"
+											}
+										],
+										"url": {
+											"raw": "{{fixed_base_url}}/whoami",
+											"host": [
+												"{{fixed_base_url}}"
+											],
+											"path": [
+												"whoami"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "Fixed API - JWT Attack - Missing Audience/Issuer (Should Fail)",
+									"event": [
+										{
+											"listen": "test",
+											"script": {
+												"exec": [
+													"pm.test('Token without proper audience/issuer rejected', function () {",
+													"    pm.expect(pm.response.code).to.equal(401);",
+													"    const response = pm.response.json();",
+													"    pm.expect(response.error).to.equal('invalid token');",
+													"});"
+												],
+												"type": "text/javascript"
+											}
+										}
+									],
+									"request": {
+										"method": "GET",
+										"header": [
+											{
+												"key": "Authorization",
+												"value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOjEsInJvbGUiOiJ1c2VyIiwidGVuYW50X2lkIjoidDEifQ.invalid-signature-here",
+												"description": "JWT without audience/issuer should be rejected"
+											}
+										],
+										"url": {
+											"raw": "{{fixed_base_url}}/whoami",
+											"host": [
+												"{{fixed_base_url}}"
+											],
+											"path": [
+												"whoami"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "Fixed API - M2M with Valid Dynamic API Key",
+									"event": [
+										{
+											"listen": "test",
+											"script": {
+												"exec": [
+													"pm.test('Valid API key accepted', function () {",
+													"    pm.expect(pm.response.code).to.equal(200);",
+													"    const response = pm.response.json();",
+													"    pm.expect(response.data).to.be.a('string');",
+													"});"
+												],
+												"type": "text/javascript"
+											}
+										}
+									],
+									"request": {
+										"method": "GET",
+										"header": [
+											{
+												"key": "x-api-key",
+												"value": "dynamic-key-abc"
+											}
+										],
+										"url": {
+											"raw": "{{fixed_base_url}}/m2m/data",
+											"host": [
+												"{{fixed_base_url}}"
+											],
+											"path": [
+												"m2m",
+												"data"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "Fixed API - M2M with Invalid API Key (Should Fail)",
+									"event": [
+										{
+											"listen": "test",
+											"script": {
+												"exec": [
+													"pm.test('Invalid API key rejected', function () {",
+													"    pm.expect(pm.response.code).to.equal(401);",
+													"});"
+												],
+												"type": "text/javascript"
+											}
+										}
+									],
+									"request": {
+										"method": "GET",
+										"header": [
+											{
+												"key": "x-api-key",
+												"value": "invalid-key"
+											}
+										],
+										"url": {
+											"raw": "{{fixed_base_url}}/m2m/data",
+											"host": [
+												"{{fixed_base_url}}"
+											],
+											"path": [
+												"m2m",
+												"data"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "Fixed API - M2M without API Key (Should Fail)",
+									"event": [
+										{
+											"listen": "test",
+											"script": {
+												"exec": [
+													"pm.test('Missing API key rejected', function () {",
+													"    pm.expect(pm.response.code).to.equal(401);",
+													"});"
+												],
+												"type": "text/javascript"
+											}
+										}
+									],
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "{{fixed_base_url}}/m2m/data",
+											"host": [
+												"{{fixed_base_url}}"
+											],
+											"path": [
+												"m2m",
+												"data"
+											]
+										}
+									},
+									"response": []
+								}
+							]
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "02-validation-sanitization",
+			"item": [
+				{
+					"name": "🔴 VULNERABLE SERVER (Port 3001)",
+					"item": [
+						{
+							"name": "Health Check",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{vuln_base_url}}/api/health",
+									"host": [
+										"{{vuln_base_url}}"
+									],
+									"path": [
+										"api",
+										"health"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "💀 SQL Injection - User Registration - DROP",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"email\": \"hacker@evil.com\",\n  \"nik\": \"9999999999999998\",\n  \"full_name\": \"Hacker McHackface\",\n  \"account_number\": \"ACC999999999999\",\n  \"initial_balance\": 1000000,\n  \"profile_bio\": \"Normal bio'); DROP TABLE users; INSERT INTO users (email, nik, full_name, account_number, balance, profile_bio) VALUES ('injected@evil.com', '1111111111111111', 'Injected User', 'INJECTED123', 999999, 'I was injected via SQL injection\"\n}"
+								},
+								"url": {
+									"raw": "{{vuln_base_url}}/api/register",
+									"host": [
+										"{{vuln_base_url}}"
+									],
+									"path": [
+										"api",
+										"register"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "💀 SQL Injection - User Registration - DELETE",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"email\": \"hacker2@evil.com\",\n  \"nik\": \"9999999999999997\",\n  \"full_name\": \"Hacker McHackface\",\n  \"account_number\": \"ACC999999999998\",\n  \"initial_balance\": 1000000,\n  \"profile_bio\": \"Normal bio'); DELETE FROM users WHERE id=5; INSERT INTO users (email, nik, full_name, account_number, balance, profile_bio) VALUES ('injected@evil.com', '1111111111111111', 'Injected User', 'INJECTED123', 999999, 'I was injected via SQL injection\"\n}"
+								},
+								"url": {
+									"raw": "{{vuln_base_url}}/api/register",
+									"host": [
+										"{{vuln_base_url}}"
+									],
+									"path": [
+										"api",
+										"register"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "💀 SQL Injection - User Search",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{vuln_base_url}}/api/users/search?email=' OR '1'='1' --",
+									"host": [
+										"{{vuln_base_url}}"
+									],
+									"path": [
+										"api",
+										"users",
+										"search"
+									],
+									"query": [
+										{
+											"key": "email",
+											"value": "' OR '1'='1' --"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "💀 Stored XSS - Profile Bio Update",
+							"request": {
+								"method": "PUT",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"profile_bio\": \"<script>alert('XSS Attack! Cookie: ' + document.cookie)</script>\"\n}"
+								},
+								"url": {
+									"raw": "{{vuln_base_url}}/api/profile/ACC001234567892/bio",
+									"host": [
+										"{{vuln_base_url}}"
+									],
+									"path": [
+										"api",
+										"profile",
+										"ACC001234567892",
+										"bio"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "💀 Business Logic - Overdraft Transfer",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"from_account\": \"ACC001234567890\",\n  \"to_account\": \"ACC001234567891\",\n  \"amount\": 999999999,\n  \"description\": \"Overdraft attack\"\n}"
+								},
+								"url": {
+									"raw": "{{vuln_base_url}}/api/transfer",
+									"host": [
+										"{{vuln_base_url}}"
+									],
+									"path": [
+										"api",
+										"transfer"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "💀 Information Disclosure - All Users",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{vuln_base_url}}/api/users",
+									"host": [
+										"{{vuln_base_url}}"
+									],
+									"path": [
+										"api",
+										"users"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "💀 Unauthorized Deletion",
+							"request": {
+								"method": "DELETE",
+								"header": [],
+								"url": {
+									"raw": "{{vuln_base_url}}/api/user/1",
+									"host": [
+										"{{vuln_base_url}}"
+									],
+									"path": [
+										"api",
+										"user",
+										"1"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "View Profile (XSS Display)",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{vuln_base_url}}/api/profile/ACC001234567892",
+									"host": [
+										"{{vuln_base_url}}"
+									],
+									"path": [
+										"api",
+										"profile",
+										"ACC001234567892"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "🟢 SECURE SERVER (Port 3002)",
+					"item": [
+						{
+							"name": "Health Check",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{fixed_base_url}}/api/health",
+									"host": [
+										"{{fixed_base_url}}"
+									],
+									"path": [
+										"api",
+										"health"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "✅ Secure User Registration",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"email\": \"john.smith@email.com\",\n  \"nik\": \"1234567890123456\",\n  \"full_name\": \"John Smith\",\n  \"account_number\": \"ACC001234567899\",\n  \"initial_balance\": 1000,\n  \"profile_bio\": \"I am a legitimate user\"\n}"
+								},
+								"url": {
+									"raw": "{{fixed_base_url}}/api/register",
+									"host": [
+										"{{fixed_base_url}}"
+									],
+									"path": [
+										"api",
+										"register"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "✅ Secure User Search",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{fixed_base_url}}/api/users/search?email=jane.smith@email.com",
+									"host": [
+										"{{fixed_base_url}}"
+									],
+									"path": [
+										"api",
+										"users",
+										"search"
+									],
+									"query": [
+										{
+											"key": "email",
+											"value": "jane.smith@email.com"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "✅ Secure Profile Bio Update",
+							"request": {
+								"method": "PUT",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"profile_bio\": \"I am a software developer with 5 years of experience.\"\n}"
+								},
+								"url": {
+									"raw": "{{fixed_base_url}}/api/profile/1/bio",
+									"host": [
+										"{{fixed_base_url}}"
+									],
+									"path": [
+										"api",
+										"profile",
+										"1",
+										"bio"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "✅ Secure Money Transfer",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"from_account\": \"ACC001234567890\",\n  \"to_account\": \"ACC001234567891\",\n  \"amount\": 100,\n  \"description\": \"Payment for services\"\n}"
+								},
+								"url": {
+									"raw": "{{fixed_base_url}}/api/transfer",
+									"host": [
+										"{{fixed_base_url}}"
+									],
+									"path": [
+										"api",
+										"transfer"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "View Secure Profile",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{fixed_base_url}}/api/profile/ACC001234567892",
+									"host": [
+										"{{fixed_base_url}}"
+									],
+									"path": [
+										"api",
+										"profile",
+										"ACC001234567892"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "03-data-encryption",
+			"item": [
+				{
+					"name": "Vulnerable API (localhost:3001)",
+					"item": [
+						{
+							"name": "Health",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{vuln_base_url}}/health",
+									"host": [
+										"{{vuln_base_url}}"
+									],
+									"path": [
+										"health"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Admin Users (plaintext)",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{vuln_base_url}}/admin/users",
+									"host": [
+										"{{vuln_base_url}}"
+									],
+									"path": [
+										"admin",
+										"users"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Create User (plaintext)",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"full_name\": \"{{full_name}}\",\n  \"email\": \"{{email}}\",\n  \"national_id\": \"{{national_id}}\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{vuln_base_url}}/users",
+									"host": [
+										"{{vuln_base_url}}"
+									],
+									"path": [
+										"users"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "Secure API (localhost:3002)",
+					"item": [
+						{
+							"name": "Health",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{fixed_base_url}}/health",
+									"host": [
+										"{{fixed_base_url}}"
+									],
+									"path": [
+										"health"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Admin Users (ciphertext only)",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{fixed_base_url}}/admin/users",
+									"host": [
+										"{{fixed_base_url}}"
+									],
+									"path": [
+										"admin",
+										"users"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Tools: Encrypt Payload",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"const json = pm.response.json();",
+											"pm.collectionVariables.set('encrypted_payload', json.encrypted);",
+											"pm.test('Encrypted payload set', function () {",
+											"  pm.expect(pm.collectionVariables.get('encrypted_payload')).to.be.a('string').and.not.empty;",
+											"});"
+										],
+										"type": "text/javascript",
+										"packages": {},
+										"requests": {}
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"full_name\": \"{{full_name}}\",\n  \"email\": \"{{email}}\",\n  \"national_id\": \"{{national_id}}\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{fixed_base_url}}/tools/encrypt",
+									"host": [
+										"{{fixed_base_url}}"
+									],
+									"path": [
+										"tools",
+										"encrypt"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Create User (encrypted body)",
+							"event": [
+								{
+									"listen": "prerequest",
+									"script": {
+										"exec": [
+											"if (!pm.collectionVariables.get('encrypted_payload')) {",
+											"  console.warn('encrypted_payload kosong. Jalankan \\u2018Tools: Encrypt Payload\\u2019 terlebih dahulu.');",
+											"}"
+										],
+										"type": "text/javascript",
+										"packages": {},
+										"requests": {}
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "text/plain"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{{encrypted_payload}}",
+									"options": {
+										"raw": {
+											"language": "text"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{fixed_base_url}}/users",
+									"host": [
+										"{{fixed_base_url}}"
+									],
+									"path": [
+										"users"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Create User (plaintext body → pre-request encrypt)",
+							"event": [
+								{
+									"listen": "prerequest",
+									"script": {
+										"exec": [
+											"// Read plaintext JSON in Body tab",
+											"const raw = pm.request.body && pm.request.body.raw ? pm.request.body.raw : '';",
+											"let payload;",
+											"try {",
+											"  payload = JSON.parse(pm.variables.replaceIn(raw));",
+											"} catch (e) {",
+											"  throw new Error('Body must be valid JSON: ' + e.message);",
+											"}",
+											"// Use server helper to encrypt",
+											"const baseUrl = pm.collectionVariables.get('secure_base_url') || 'http://localhost:3002';",
+											"pm.sendRequest({",
+											"  url: baseUrl + '/tools/encrypt',",
+											"  method: 'POST',",
+											"  header: { 'Content-Type': 'application/json' },",
+											"  body: { mode: 'raw', raw: JSON.stringify(payload) }",
+											"}, (err, resp) => {",
+											"  if (err) { console.error('Encryption error', err); return; }",
+											"  const json = resp.json();",
+											"  const enc = json.encrypted;",
+											"  // Replace request with ciphertext and adjust header",
+											"  pm.request.headers.upsert({ key: 'Content-Type', value: 'text/plain' });",
+											"  pm.request.body.update({ mode: 'raw', raw: enc });",
+											"  pm.collectionVariables.set('encrypted_payload', enc);",
+											"});"
+										],
+										"type": "text/javascript",
+										"packages": {},
+										"requests": {}
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"full_name\": \"{{full_name}}\",\n  \"email\": \"{{email}}\",\n  \"national_id\": \"{{national_id}}\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{fixed_base_url}}/users",
+									"host": [
+										"{{fixed_base_url}}"
+									],
+									"path": [
+										"users"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Tools: Decrypt Payload (verify)",
+							"event": [
+								{
+									"listen": "prerequest",
+									"script": {
+										"exec": [
+											"if (!pm.collectionVariables.get('encrypted_payload')) {",
+											"  console.warn('encrypted_payload is empty. Run \\u2018Tools: Encrypt Payload\\u2019 first or set it under Collection Variables.');",
+											"}"
+										],
+										"type": "text/javascript",
+										"packages": {},
+										"requests": {}
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "text/plain"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "tKE77WmSa/olmwUcG0kM46qZ/sn3kO+Nphi/YZJOBChZA8JsBpqnBqoRqSfJg21/DVRRgl/iGgbrBvWAvcheJR4JviEAWv34+o/We/QOsPwZc+c5BihXCC/2mi/+YxTIxELZTFxDUhzniExNemEIBeCwsuPUmw==",
+									"options": {
+										"raw": {
+											"language": "text"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{fixed_base_url}}/tools/decrypt",
+									"host": [
+										"{{fixed_base_url}}"
+									],
+									"path": [
+										"tools",
+										"decrypt"
+									]
+								},
+								"description": "Usage: ensure {{encrypted_payload}} is set (run 'Tools: Encrypt Payload' first or set it in Collection variables). This sends base64 ciphertext as text/plain to /tools/decrypt and returns plaintext JSON."
+							},
+							"response": []
+						}
+					]
+				}
+			]
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"requests": {},
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"requests": {},
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "vuln_base_url",
+			"value": ""
+		},
+		{
+			"key": "fixed_base_url",
+			"value": ""
+		},
+		{
+			"key": "alice_token",
+			"value": ""
+		},
+		{
+			"key": "bob_token",
+			"value": ""
+		},
+		{
+			"key": "charlie_token",
+			"value": ""
+		},
+		{
+			"key": "encrypted_payload",
+			"value": ""
+		},
+		{
+			"key": "jwt_token",
+			"value": ""
+		}
+	]
+}
