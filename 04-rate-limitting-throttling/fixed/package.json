@@ -1,0 +1,20 @@
+{
+  "name": "rate-limit-throttle-fixed",
+  "version": "1.0.0",
+  "description": "Fixed API with secure Rate Limiting & Throttling",
+  "main": "server.js",
+  "type": "module",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "bottleneck": "^2.19.5",
+    "express": "^4.19.2",
+    "express-rate-limit": "^7.1.5",
+    "helmet": "^7.0.0",
+    "morgan": "^1.10.0",
+    "pg": "^8.11.3",
+    "rate-limit-redis": "^4.0.0",
+    "redis": "^4.6.13"
+  }
+}

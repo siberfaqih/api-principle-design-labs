@@ -1,0 +1,260 @@
+{
+  host: 'db',
+  database: 'secure_api_lab',
+  level: 'info',
+  message: 'Database connected successfully',
+  timestamp: '2025-10-28 07:24:37:2437'
+}
+{
+  port: '3000',
+  environment: 'production',
+  nodeVersion: 'v18.20.8',
+  level: 'info',
+  message: 'Secure server started',
+  timestamp: '2025-10-28 07:24:37:2437'
+}
+{
+  message: 'SIGTERM received, shutting down gracefully',
+  level: 'info',
+  timestamp: '2025-10-28 14:03:25:325'
+}
+{
+  host: 'db',
+  database: 'secure_api_lab',
+  level: 'info',
+  message: 'Database connected successfully',
+  timestamp: '2025-10-28 14:04:12:412'
+}
+{
+  port: '3000',
+  environment: 'production',
+  nodeVersion: 'v18.20.8',
+  level: 'info',
+  message: 'Secure server started',
+  timestamp: '2025-10-28 14:04:12:412'
+}
+{
+  requestId: '6160f7f5-0861-4bd5-81af-a5931cb40f36',
+  path: '/api/login',
+  method: 'POST',
+  body: { username: 'admin', password: '[REDACTED]' },
+  ip: '::ffff:192.168.65.1',
+  userAgent: 'curl/8.7.1',
+  userId: null,
+  level: 'info',
+  message: 'Input validation request',
+  timestamp: '2025-10-28 14:06:26:626'
+}
+{
+  requestId: '6160f7f5-0861-4bd5-81af-a5931cb40f36',
+  method: 'POST',
+  url: '/api/login',
+  status: '401',
+  contentLength: '82',
+  responseTime: '134.285',
+  userAgent: 'curl/8.7.1',
+  ip: '::ffff:192.168.65.1',
+  userId: null,
+  timestamp: '2025-10-28 14:06:26:626',
+  level: 'warn',
+  message: 'HTTP Request Warning'
+}
+{
+  requestId: '0b58df8a-374d-4737-b35a-70b3056d2da9',
+  path: '/api/login',
+  method: 'POST',
+  body: {
+    username: "admin' UNION SELECT table_name,2,3,4,5,6,7,8,9 FROM information_schema.tables WHERE table_schema=database() --",
+    password: '[REDACTED]'
+  },
+  ip: '::ffff:192.168.65.1',
+  userAgent: 'curl/8.7.1',
+  userId: null,
+  level: 'info',
+  message: 'Input validation request',
+  timestamp: '2025-10-28 14:07:02:72'
+}
+{
+  requestId: '0b58df8a-374d-4737-b35a-70b3056d2da9',
+  method: 'POST',
+  url: '/api/login',
+  status: '400',
+  contentLength: '288',
+  responseTime: '6.868',
+  userAgent: 'curl/8.7.1',
+  ip: '::ffff:192.168.65.1',
+  userId: null,
+  timestamp: '2025-10-28 14:07:02:72',
+  level: 'warn',
+  message: 'HTTP Request Warning'
+}
+{
+  requestId: 'a4739fcc-43c4-4e95-815b-529615edec00',
+  path: '/api/login',
+  method: 'POST',
+  body: {
+    username: "admin' UNION SELECT column_name,2,3,4,5,6,7,8,9 FROM information_schema.columns WHERE table_name='users' --",
+    password: '[REDACTED]'
+  },
+  ip: '::ffff:192.168.65.1',
+  userAgent: 'curl/8.7.1',
+  userId: null,
+  level: 'info',
+  message: 'Input validation request',
+  timestamp: '2025-10-28 14:07:02:72'
+}
+{
+  requestId: 'a4739fcc-43c4-4e95-815b-529615edec00',
+  method: 'POST',
+  url: '/api/login',
+  status: '400',
+  contentLength: '285',
+  responseTime: '2.753',
+  userAgent: 'curl/8.7.1',
+  ip: '::ffff:192.168.65.1',
+  userId: null,
+  timestamp: '2025-10-28 14:07:02:72',
+  level: 'warn',
+  message: 'HTTP Request Warning'
+}
+{
+  message: 'SIGTERM received, shutting down gracefully',
+  level: 'info',
+  timestamp: '2025-10-28 14:13:44:1344'
+}
+{
+  host: 'db',
+  database: 'secure_api_lab',
+  level: 'info',
+  message: 'Database connected successfully',
+  timestamp: '2025-10-28 14:14:27:1427'
+}
+{
+  port: '3000',
+  environment: 'production',
+  nodeVersion: 'v18.20.8',
+  level: 'info',
+  message: 'Secure server started',
+  timestamp: '2025-10-28 14:14:27:1427'
+}
+{
+  requestId: '2a15d8ab-8105-4d7c-a0b6-3a1c3ee04605',
+  path: '/api/login',
+  method: 'POST',
+  body: {
+    username: "admin' UNION SELECT table_name,2,3,4,5,6,7,8,9 FROM information_schema.tables WHERE table_schema=database() --",
+    password: '[REDACTED]'
+  },
+  ip: '::ffff:192.168.65.1',
+  userAgent: 'curl/8.7.1',
+  userId: null,
+  level: 'info',
+  message: 'Input validation request',
+  timestamp: '2025-10-28 14:15:40:1540'
+}
+{
+  requestId: '2a15d8ab-8105-4d7c-a0b6-3a1c3ee04605',
+  method: 'POST',
+  url: '/api/login',
+  status: '400',
+  contentLength: '288',
+  responseTime: '10.849',
+  userAgent: 'curl/8.7.1',
+  ip: '::ffff:192.168.65.1',
+  userId: null,
+  timestamp: '2025-10-28 14:15:40:1540',
+  level: 'warn',
+  message: 'HTTP Request Warning'
+}
+{
+  requestId: 'ca356147-ff2c-4c04-9577-2cd3f95434fa',
+  path: '/api/login',
+  method: 'POST',
+  body: {
+    username: "admin' UNION SELECT column_name,2,3,4,5,6,7,8,9 FROM information_schema.columns WHERE table_name='users' --",
+    password: '[REDACTED]'
+  },
+  ip: '::ffff:192.168.65.1',
+  userAgent: 'curl/8.7.1',
+  userId: null,
+  level: 'info',
+  message: 'Input validation request',
+  timestamp: '2025-10-28 14:15:40:1540'
+}
+{
+  requestId: 'ca356147-ff2c-4c04-9577-2cd3f95434fa',
+  method: 'POST',
+  url: '/api/login',
+  status: '400',
+  contentLength: '285',
+  responseTime: '4.186',
+  userAgent: 'curl/8.7.1',
+  ip: '::ffff:192.168.65.1',
+  userId: null,
+  timestamp: '2025-10-28 14:15:40:1540',
+  level: 'warn',
+  message: 'HTTP Request Warning'
+}
+{
+  requestId: 'f78b9283-2a4f-414a-a077-055abcb2e5db',
+  path: '/api/login',
+  method: 'POST',
+  body: {
+    username: "admin' UNION SELECT table_name,2,3,4,5,6,7,8,9 FROM information_schema.tables WHERE table_schema=database() --",
+    password: '[REDACTED]'
+  },
+  ip: '::ffff:192.168.65.1',
+  userAgent: 'curl/8.7.1',
+  userId: null,
+  level: 'info',
+  message: 'Input validation request',
+  timestamp: '2025-10-28 14:29:45:2945'
+}
+{
+  requestId: 'f78b9283-2a4f-414a-a077-055abcb2e5db',
+  method: 'POST',
+  url: '/api/login',
+  status: '400',
+  contentLength: '288',
+  responseTime: '8.527',
+  userAgent: 'curl/8.7.1',
+  ip: '::ffff:192.168.65.1',
+  userId: null,
+  timestamp: '2025-10-28 14:29:45:2945',
+  level: 'warn',
+  message: 'HTTP Request Warning'
+}
+{
+  requestId: '78de52d0-79ae-46f9-9cb3-66e0c86a7212',
+  path: '/api/login',
+  method: 'POST',
+  body: {
+    username: "admin' UNION SELECT column_name,2,3,4,5,6,7,8,9 FROM information_schema.columns WHERE table_name='users' --",
+    password: '[REDACTED]'
+  },
+  ip: '::ffff:192.168.65.1',
+  userAgent: 'curl/8.7.1',
+  userId: null,
+  level: 'info',
+  message: 'Input validation request',
+  timestamp: '2025-10-28 14:29:45:2945'
+}
+{
+  requestId: '78de52d0-79ae-46f9-9cb3-66e0c86a7212',
+  method: 'POST',
+  url: '/api/login',
+  status: '400',
+  contentLength: '285',
+  responseTime: '2.618',
+  userAgent: 'curl/8.7.1',
+  ip: '::ffff:192.168.65.1',
+  userId: null,
+  timestamp: '2025-10-28 14:29:45:2945',
+  level: 'warn',
+  message: 'HTTP Request Warning'
+}
+{
+  message: 'SIGTERM received, shutting down gracefully',
+  level: 'info',
+  timestamp: '2025-10-28 14:31:21:3121'
+}

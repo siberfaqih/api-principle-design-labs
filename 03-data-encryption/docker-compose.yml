@@ -1,0 +1,41 @@
+version: "3.8"
+services:
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: labuser
+      POSTGRES_PASSWORD: labpass
+      POSTGRES_DB: labdb
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+  vuln-api:
+    build:
+      context: ./vuln-api
+    environment:
+      DATABASE_URL: postgres://labuser:labpass@db:5432/labdb
+      NODE_ENV: development
+    depends_on:
+      - db
+    ports:
+      - "3000:3000"
+  secure-api:
+    build:
+      context: ./secure-api
+    environment:
+      DATABASE_URL: postgres://labuser:labpass@db:5432/labdb
+      NODE_ENV: development
+      ENCRYPTION_KEY_BASE64: "NnqQm3oCkqYI2rO0bY9CkYQHkqJkY7bYQ3oA1Vg1HnU="
+    depends_on:
+      - db
+    ports:
+      - "3001:3001"
+  ui-server:
+    build:
+      context: ./ui-server
+    depends_on:
+      - secure-api
+      - vuln-api
+    ports:
+      - "4000:4000"

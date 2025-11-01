@@ -1,0 +1,165 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Secure API Lab UI</title>
+  <style>
+    body { font-family: system-ui, -apple-system, sans-serif; margin: 24px; }
+    .row { display: flex; gap: 24px; align-items: flex-start; }
+    .col { flex: 1; min-width: 280px; }
+    label { display: block; margin: 8px 0 4px; font-weight: 600; }
+    input, textarea, select { width: 100%; padding: 8px; }
+    textarea { min-height: 120px; }
+    .card { border: 1px solid #ddd; border-radius: 8px; padding: 16px; margin-top: 16px; }
+    .actions { display: flex; gap: 12px; margin-top: 12px; }
+    .note { font-size: 13px; color: #555; }
+    .success { color: #0c7; }
+    .error { color: #c00; }
+    code { background: #f6f8fa; padding: 2px 6px; border-radius: 4px; }
+  </style>
+  <script>
+    const CONFIG = {
+      secureBaseUrl: 'http://localhost:3001',
+      vulnBaseUrl: 'http://localhost:3000',
+      keyB64: 'NnqQm3oCkqYI2rO0bY9CkYQHkqJkY7bYQ3oA1Vg1HnU='
+    };
+
+    function toB64(bytes) {
+      let bin = '';
+      for (let i = 0; i < bytes.length; i++) bin += String.fromCharCode(bytes[i]);
+      return btoa(bin);
+    }
+    function fromB64(b64) {
+      const bin = atob(b64);
+      const bytes = new Uint8Array(bin.length);
+      for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+      return bytes;
+    }
+
+    async function encryptAesGcmPacked(obj) {
+      const keyBytes = fromB64(CONFIG.keyB64);
+      const key = await crypto.subtle.importKey('raw', keyBytes, { name: 'AES-GCM' }, false, ['encrypt']);
+      const iv = crypto.getRandomValues(new Uint8Array(12));
+      const enc = new TextEncoder().encode(JSON.stringify(obj));
+      const ctWithTagBuf = await crypto.subtle.encrypt({ name: 'AES-GCM', iv, tagLength: 128 }, key, enc);
+      const ctWithTag = new Uint8Array(ctWithTagBuf);
+      const tag = ctWithTag.slice(ctWithTag.length - 16);
+      const ciphertext = ctWithTag.slice(0, ctWithTag.length - 16);
+      const packed = new Uint8Array(iv.length + tag.length + ciphertext.length);
+      packed.set(iv, 0);
+      packed.set(tag, iv.length);
+      packed.set(ciphertext, iv.length + tag.length);
+      return toB64(packed);
+    }
+
+    function buildPayload() {
+      return {
+        full_name: document.getElementById('full_name').value,
+        email: document.getElementById('email').value,
+        national_id: document.getElementById('national_id').value
+      };
+    }
+
+    function updatePreview() {
+      const payload = buildPayload();
+      document.getElementById('plaintextPreview').value = JSON.stringify(payload, null, 2);
+    }
+
+    async function previewEncrypt() {
+      try {
+        const payload = buildPayload();
+        const b64 = await encryptAesGcmPacked(payload);
+        document.getElementById('cipherPreview').value = b64;
+        setStatus('Encrypted preview generated', 'success');
+      } catch (e) {
+        setStatus('Encrypt error: ' + e.message, 'error');
+      }
+    }
+
+    async function sendSecure() {
+      try {
+        const payload = buildPayload();
+        const b64 = await encryptAesGcmPacked(payload);
+        const res = await fetch(CONFIG.secureBaseUrl + '/users', {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain' },
+          body: b64
+        });
+        const json = await res.json();
+        document.getElementById('response').textContent = JSON.stringify(json, null, 2);
+        setStatus('Sent encrypted body to secure-api', res.ok ? 'success' : 'error');
+      } catch (e) {
+        setStatus('Send error: ' + e.message, 'error');
+      }
+    }
+
+    async function sendVuln() {
+      try {
+        const payload = buildPayload();
+        const res = await fetch(CONFIG.vulnBaseUrl + '/users', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const json = await res.json();
+        document.getElementById('response').textContent = JSON.stringify(json, null, 2);
+        setStatus('Sent plaintext body to vuln-api', res.ok ? 'success' : 'error');
+      } catch (e) {
+        setStatus('Send error: ' + e.message, 'error');
+      }
+    }
+
+    function setStatus(msg, cls) {
+      const el = document.getElementById('status');
+      el.className = 'note ' + (cls === 'success' ? 'success' : cls === 'error' ? 'error' : '');
+      el.textContent = msg;
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      ['full_name', 'email', 'national_id'].forEach(id => {
+        document.getElementById(id).addEventListener('input', updatePreview);
+      });
+      updatePreview();
+      document.getElementById('previewEncryptBtn').addEventListener('click', previewEncrypt);
+      document.getElementById('sendSecureBtn').addEventListener('click', sendSecure);
+      document.getElementById('sendVulnBtn').addEventListener('click', sendVuln);
+    });
+  </script>
+</head>
+<body>
+  <h2>Secure API Lab UI</h2>
+  <p class="note">Masukkan PII di bawah ini. UI menampilkan plaintext di panel kiri, dan ciphertext hasil enkripsi di panel kanan. Saat Anda klik "Send Encrypted", body request yang dikirim ke server sudah terenkripsi (lihat di Burp).</p>
+  <div class="card">
+    <div class="row">
+      <div class="col">
+        <label>Full Name</label>
+        <input id="full_name" placeholder="Alice Example" value="Alice Example" />
+        <label style="margin-top:8px;">Email</label>
+        <input id="email" placeholder="alice@example.com" value="alice@example.com" />
+        <label style="margin-top:8px;">National ID</label>
+        <input id="national_id" placeholder="1234567890123456" value="1234567890123456" />
+      </div>
+      <div class="col">
+        <label>Plaintext Preview (JSON)</label>
+        <textarea id="plaintextPreview" readonly></textarea>
+      </div>
+      <div class="col">
+        <label>Ciphertext Preview (base64)</label>
+        <textarea id="cipherPreview" readonly placeholder="Klik 'Preview Encrypt' untuk melihat ciphertext"></textarea>
+      </div>
+    </div>
+    <div class="actions">
+      <button id="previewEncryptBtn">Preview Encrypt</button>
+      <button id="sendSecureBtn">Send Encrypted → secure-api</button>
+      <button id="sendVulnBtn">Send Plaintext → vuln-api</button>
+    </div>
+    <div id="status" class="note">Ready</div>
+  </div>
+
+  <div class="card">
+    <label>Server Response</label>
+    <pre id="response" style="white-space:pre-wrap"></pre>
+  </div>
+</body>
+</html>

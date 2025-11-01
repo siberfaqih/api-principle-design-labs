@@ -1,0 +1,42 @@
+{
+  "name": "secure-api-design-lab",
+  "version": "1.0.0",
+  "description": "Hands-on Lab for Secure API Design Principles - Input Validation and Sanitization",
+  "main": "secure-server.js",
+  "scripts": {
+    "init-db": "node init-db.js",
+    "vuln-server": "node vuln-server.js",
+    "secure-server": "node secure-server.js",
+    "test": "node test/integration-tests.js",
+    "docker:up": "docker compose up -d --build",
+    "docker:down": "docker compose down",
+    "docker:reset": "docker compose down -v && docker compose up -d --build"
+  },
+  "keywords": [
+    "security",
+    "api",
+    "validation",
+    "sanitization",
+    "nodejs",
+    "express",
+    "sql-injection",
+    "xss"
+  ],
+  "author": "Security Lab",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.18.2",
+    "pg": "^8.11.3",
+    "express-validator": "^7.0.1",
+    "sanitize-html": "^2.11.0",
+    "helmet": "^7.1.0",
+    "express-rate-limit": "^7.1.5",
+    "cors": "^2.8.5"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.2"
+  },
+  "engines": {
+    "node": ">=16.0.0"
+  }
+}

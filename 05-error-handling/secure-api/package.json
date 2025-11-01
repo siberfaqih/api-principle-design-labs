@@ -1,0 +1,15 @@
+{
+  "name": "secure-api",
+  "version": "1.0.0",
+  "description": "Secure API for Error Handling lab (Node.js/Express)",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js"
+  },
+  "dependencies": {
+    "express": "^4.19.2",
+    "helmet": "^7.0.0",
+    "pg": "^8.11.3",
+    "express-validator": "^7.0.1"
+  }
+}

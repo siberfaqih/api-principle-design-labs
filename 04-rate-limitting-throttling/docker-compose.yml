@@ -1,0 +1,57 @@
+version: '3.9'
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: labdb
+      POSTGRES_USER: lab
+      POSTGRES_PASSWORD: labpass
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./docker/initdb:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "lab", "-d", "labdb"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+
+  app-vuln:
+    build: ./vulnerable
+    environment:
+      NODE_ENV: production
+      PGHOST: postgres
+      PGUSER: lab
+      PGPASSWORD: labpass
+      PGDATABASE: labdb
+      PGPORT: 5432
+      PORT: 3000
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - "3000:3000"
+
+  app-fixed:
+    build: ./fixed
+    environment:
+      NODE_ENV: production
+      PGHOST: postgres
+      PGUSER: lab
+      PGPASSWORD: labpass
+      PGDATABASE: labdb
+      PGPORT: 5432
+      REDIS_URL: redis://redis:6379
+      PORT: 3001
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    ports:
+      - "3001:3001"

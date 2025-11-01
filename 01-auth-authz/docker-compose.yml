@@ -1,0 +1,40 @@
+version: '3.8'
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      - POSTGRES_USER=labuser
+      - POSTGRES_PASSWORD=labpass
+      - POSTGRES_DB=labdb
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+  vuln_api:
+    build: ./vuln_api
+    ports:
+      - "3000:3000"
+    environment:
+      - JWT_SECRET=random
+      - PGHOST=db
+      - PGPORT=5432
+      - PGDATABASE=labdb
+      - PGUSER=labuser
+      - PGPASSWORD=labpass
+    depends_on:
+      - db
+  fixed_api:
+    build: ./fixed_api
+    ports:
+      - "3001:3001"
+    environment:
+      - JWT_SECRET=replace-with-secure-secret
+      - PGHOST=db
+      - PGPORT=5432
+      - PGDATABASE=labdb
+      - PGUSER=labuser
+      - PGPASSWORD=labpass
+    depends_on:
+      - db
+volumes:
+  pgdata:

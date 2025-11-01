@@ -1,0 +1,136 @@
+version: '3.8'
+
+services:
+  # MySQL Database
+  db:
+    image: mysql:8.0
+    container_name: secure_api_db
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: secure_api_lab
+      MYSQL_USER: apiuser
+      MYSQL_PASSWORD: apipassword
+    ports:
+      - "3306:3306"
+    volumes:
+      - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql
+      - mysql_data:/var/lib/mysql
+    networks:
+      - api_network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      timeout: 20s
+      retries: 10
+
+  # Vulnerable API Application
+  vulnerable-api:
+    build: .
+    container_name: vulnerable_api
+    command: npm run start:vulnerable
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=development
+      - DB_HOST=db
+      - DB_PORT=3306
+      - DB_USER=root
+      - DB_PASSWORD=rootpassword
+      - DB_NAME=secure_api_lab
+      - JWT_SECRET=super-secret-key
+      - PORT=3000
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - ./vulnerable-app:/app/vulnerable-app
+      - ./logs:/app/logs
+    networks:
+      - api_network
+    restart: unless-stopped
+
+  # Secure API Application
+  secure-api:
+    build: .
+    container_name: secure_api
+    command: npm run start:secure
+    ports:
+      - "3001:3000"
+    environment:
+      - NODE_ENV=production
+      - DB_HOST=db
+      - DB_PORT=3306
+      - DB_USER=root
+      - DB_PASSWORD=rootpassword
+      - DB_NAME=secure_api_lab
+      - JWT_SECRET=your-super-secret-jwt-key-change-this-in-production
+      - PORT=3000
+      - LOG_LEVEL=info
+      - RATE_LIMIT_WINDOW_MS=900000
+      - RATE_LIMIT_MAX_REQUESTS=100
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - ./secure-app:/app/secure-app
+      - ./logs:/app/logs
+    networks:
+      - api_network
+    restart: unless-stopped
+
+  # Elasticsearch for log aggregation (optional for advanced monitoring)
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.11.0
+    container_name: elasticsearch
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    ports:
+      - "9200:9200"
+    volumes:
+      - elasticsearch_data:/usr/share/elasticsearch/data
+    networks:
+      - api_network
+    profiles:
+      - monitoring
+
+  # Kibana for log visualization (optional for advanced monitoring)
+  kibana:
+    image: docker.elastic.co/kibana/kibana:8.11.0
+    container_name: kibana
+    environment:
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+    ports:
+      - "5601:5601"
+    depends_on:
+      - elasticsearch
+    networks:
+      - api_network
+    profiles:
+      - monitoring
+
+  # Logstash for log processing (optional for advanced monitoring)
+  logstash:
+    image: docker.elastic.co/logstash/logstash:8.11.0
+    container_name: logstash
+    volumes:
+      - ./logstash/pipeline:/usr/share/logstash/pipeline
+      - ./logs:/usr/share/logstash/logs
+    ports:
+      - "5044:5044"
+    environment:
+      - "LS_JAVA_OPTS=-Xmx256m -Xms256m"
+    depends_on:
+      - elasticsearch
+    networks:
+      - api_network
+    profiles:
+      - monitoring
+
+volumes:
+  mysql_data:
+  elasticsearch_data:
+
+networks:
+  api_network:
+    driver: bridge

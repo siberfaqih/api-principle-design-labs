@@ -1,0 +1,209 @@
+{
+  "info": {
+    "name": "Secure API - Data Encryption Lab",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "full_name", "value": "Charlie Example" },
+    { "key": "email", "value": "charlie@example.com" },
+    { "key": "national_id", "value": "1111222233334444" },
+    { "key": "vuln_base_url", "value": "http://localhost:3001" },
+    { "key": "secure_base_url", "value": "http://localhost:3002" },
+    { "key": "encrypted_payload", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "Vulnerable API (localhost:3001)",
+      "item": [
+        {
+          "name": "Health",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{vuln_base_url}}/health"
+          }
+        },
+        {
+          "name": "Admin Users (plaintext)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{vuln_base_url}}/admin/users"
+          }
+        },
+        {
+          "name": "Create User (plaintext)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"full_name\": \"{{full_name}}\",\n  \"email\": \"{{email}}\",\n  \"national_id\": \"{{national_id}}\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": "{{vuln_base_url}}/users"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Secure API (localhost:3002)",
+      "item": [
+        {
+          "name": "Health",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{secure_base_url}}/health"
+          }
+        },
+        {
+          "name": "Admin Users (ciphertext only)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{secure_base_url}}/admin/users"
+          }
+        },
+        {
+          "name": "Tools: Encrypt Payload",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"full_name\": \"{{full_name}}\",\n  \"email\": \"{{email}}\",\n  \"national_id\": \"{{national_id}}\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": "{{secure_base_url}}/tools/encrypt"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const json = pm.response.json();",
+                  "pm.collectionVariables.set('encrypted_payload', json.encrypted);",
+                  "pm.test('Encrypted payload set', function () {",
+                  "  pm.expect(pm.collectionVariables.get('encrypted_payload')).to.be.a('string').and.not.empty;",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Create User (encrypted body)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "text/plain" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{{encrypted_payload}}",
+              "options": { "raw": { "language": "text" } }
+            },
+            "url": "{{secure_base_url}}/users"
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (!pm.collectionVariables.get('encrypted_payload')) {",
+                  "  console.warn('encrypted_payload kosong. Jalankan \\u2018Tools: Encrypt Payload\\u2019 terlebih dahulu.');",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Create User (plaintext body → pre-request encrypt)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"full_name\": \"{{full_name}}\",\n  \"email\": \"{{email}}\",\n  \"national_id\": \"{{national_id}}\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": "{{secure_base_url}}/users"
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// Read plaintext JSON in Body tab",
+                  "const raw = pm.request.body && pm.request.body.raw ? pm.request.body.raw : '';",
+                  "let payload;",
+                  "try {",
+                  "  payload = JSON.parse(pm.variables.replaceIn(raw));",
+                  "} catch (e) {",
+                  "  throw new Error('Body must be valid JSON: ' + e.message);",
+                  "}",
+                  "// Use server helper to encrypt",
+                  "const baseUrl = pm.collectionVariables.get('secure_base_url') || 'http://localhost:3002';",
+                  "pm.sendRequest({",
+                  "  url: baseUrl + '/tools/encrypt',",
+                  "  method: 'POST',",
+                  "  header: { 'Content-Type': 'application/json' },",
+                  "  body: { mode: 'raw', raw: JSON.stringify(payload) }",
+                  "}, (err, resp) => {",
+                  "  if (err) { console.error('Encryption error', err); return; }",
+                  "  const json = resp.json();",
+                  "  const enc = json.encrypted;",
+                  "  // Replace request with ciphertext and adjust header",
+                  "  pm.request.headers.upsert({ key: 'Content-Type', value: 'text/plain' });",
+                  "  pm.request.body.update({ mode: 'raw', raw: enc });",
+                  "  pm.collectionVariables.set('encrypted_payload', enc);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Tools: Decrypt Payload (verify)",
+          "request": {
+            "method": "POST",
+            "description": "Usage: ensure {{encrypted_payload}} is set (run 'Tools: Encrypt Payload' first or set it in Collection variables). This sends base64 ciphertext as text/plain to /tools/decrypt and returns plaintext JSON.",
+            "header": [
+              { "key": "Content-Type", "value": "text/plain" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{{encrypted_payload}}",
+              "options": { "raw": { "language": "text" } }
+            },
+            "url": "{{secure_base_url}}/tools/decrypt"
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (!pm.collectionVariables.get('encrypted_payload')) {",
+                  "  console.warn('encrypted_payload is empty. Run \\u2018Tools: Encrypt Payload\\u2019 first or set it under Collection Variables.');",
+                  "}"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
