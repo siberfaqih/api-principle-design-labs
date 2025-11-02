@@ -111,7 +111,7 @@ Ekspektasi: Health tetap `ok`; error dicatat server-side tapi tidak bocor.
 
 ### Rentan: Bocor error langsung ke klien
 File: `vuln-api/src/index.js`
-```
+```js
 // BAD: leak raw error object
 } catch (err) {
   res.status(500).json(err);
@@ -120,7 +120,7 @@ File: `vuln-api/src/index.js`
 
 ### Perbaikan: Centralized error handler + mapping aman
 File: `secure-api/src/index.js`
-```
+```js
 // Map known Postgres errors
 if (err && err.code === '23505') {
   return sendError(res, req, 409, 'USER_EMAIL_EXISTS', 'Email already exists');
@@ -135,7 +135,7 @@ app.use((err, req, res, next) => {
 
 ### Rentan: Crash proses dengan unhandled exception
 File: `vuln-api/src/index.js`
-```
+```js
 app.get('/crash', (req, res) => {
   res.json({ triggered: true });
   setImmediate(() => { throw new Error('Process crash'); });
@@ -144,7 +144,7 @@ app.get('/crash', (req, res) => {
 
 ### Perbaikan: Tangani promise rejections di route dan proses-level
 File: `secure-api/src/index.js`
-```
+```js
 app.get('/crash', async (req, res, next) => {
   try { await Promise.reject(new Error('Simulated async failure')); }
   catch (err) { next(err); }
@@ -156,13 +156,13 @@ process.on('uncaughtException', (error) => { console.error('[uncaughtException]'
 
 ### Rentan: Tidak ada validasi input
 File: `vuln-api/src/index.js`
-```
+```js
 const { email, name } = req.body; // not validated
 ```
 
 ### Perbaikan: Validasi dengan express-validator
 File: `secure-api/src/index.js`
-```
+```js
 body('email').isEmail().withMessage('email must be valid'),
 body('name').isString().isLength({ min: 1, max: 100 })
 ```
